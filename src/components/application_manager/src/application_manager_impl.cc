@@ -110,7 +110,8 @@ ApplicationManagerImpl::ApplicationManagerImpl(
     : settings_(am_settings)
     , applications_list_lock_(true)
     , audio_pass_thru_active_(false)
-    , is_distracting_driver_(false)
+    , distracting_driver_state_(
+          hmi_apis::Common_DriverDistractionState::INVALID_ENUM)
     , is_vr_session_strated_(false)
     , hmi_cooperating_(false)
     , is_all_apps_allowed_(true)
@@ -607,6 +608,8 @@ ApplicationSharedPtr ApplicationManagerImpl::RegisterApplication(
     const std::string& bundle_id = app_info[strings::bundle_id].asString();
     application->set_bundle_id(bundle_id);
   }
+  PutDriverDistractionMessageToPostponed(application);
+
   // Stops timer of saving data to resumption in order to
   // doesn't erase data from resumption storage.
   // Timer will be started after hmi level resumption.
@@ -775,8 +778,9 @@ bool ApplicationManagerImpl::EndAudioPassThrough() {
   }
 }
 
-void ApplicationManagerImpl::set_driver_distraction(const bool is_distracting) {
-  is_distracting_driver_ = is_distracting;
+void ApplicationManagerImpl::set_distracting_driver_state(
+    const hmi_apis::Common_DriverDistractionState::eType state) {
+  distracting_driver_state_ = state;
 }
 
 void ApplicationManagerImpl::set_vr_session_started(const bool state) {
@@ -1694,7 +1698,6 @@ bool ApplicationManagerImpl::ManageMobileCommand(
     const commands::MessageSharedPtr message,
     commands::Command::CommandOrigin origin) {
   LOG4CXX_AUTO_TRACE(logger_);
-
   if (!message) {
     LOG4CXX_WARN(logger_, "Null-pointer message received.");
     return false;
@@ -3405,6 +3408,45 @@ void ApplicationManagerImpl::OnHMILevelChanged(
     mobile_apis::HMILevel::eType from,
     mobile_apis::HMILevel::eType to) {
   LOG4CXX_AUTO_TRACE(logger_);
+  LOG4CXX_INFO(logger_, "HMI level from = " << from << " to = " << to);
+  ProcessPostponedMessages(app_id);
+  ProcessNaviApp(app_id, from, to);
+}
+
+void ApplicationManagerImpl::ProcessPostponedMessages(const uint32_t app_id) {
+  LOG4CXX_AUTO_TRACE(logger_);
+
+  ApplicationSharedPtr app = application(app_id);
+  if (!app) {
+    LOG4CXX_WARN(logger_, "The app with id: " << app_id << " is not exists");
+    return;
+  }
+  MobileMessageQueue messages;
+  app->SwapMobileMessageQueue(messages);
+  std::for_each(
+      messages.begin(),
+      messages.end(),
+      [this, &app](smart_objects::SmartObjectSPtr message) {
+        const std::string functionID = MessageHelper::StringifiedFunctionID(
+            static_cast<mobile_apis::FunctionID::eType>(
+                (*message)[strings::params][strings::function_id].asUInt()));
+        const RPCParams params;
+        const mobile_apis::Result::eType check_result =
+            CheckPolicyPermissions(app, functionID, params);
+        if (check_result == mobile_api::Result::SUCCESS) {
+          ManageMobileCommand(message,
+                              commands::Command::CommandOrigin::ORIGIN_SDL);
+        } else {
+          app->PushMobileMessage(message);
+        }
+
+      });
+}
+
+void ApplicationManagerImpl::ProcessNaviApp(
+    const uint32_t app_id,
+    const mobile_apis::HMILevel::eType from,
+    const mobile_apis::HMILevel::eType to) {
   using namespace mobile_apis::HMILevel;
   using namespace helpers;
 
@@ -3887,6 +3929,32 @@ void ApplicationManagerImpl::OnPTUFinished(const bool ptu_result) {
   plugin_manager_.OnPolicyEvent(
       functional_modules::PolicyEvent::kApplicationPolicyUpdated);
 #endif  // SDL_REMOTE_CONTROL
+}
+
+void ApplicationManagerImpl::PutDriverDistractionMessageToPostponed(
+    ApplicationSharedPtr application) const {
+  LOG4CXX_AUTO_TRACE(logger_);
+  if (hmi_apis::Common_DriverDistractionState::INVALID_ENUM ==
+      distracting_driver_state()) {
+    LOG4CXX_INFO(logger_, "DriverDistractionState is INVALID_ENUM");
+    return;
+  }
+  smart_objects::SmartObjectSPtr on_driver_distraction =
+      utils::MakeShared<smart_objects::SmartObject>();
+
+  if (!on_driver_distraction) {
+    LOG4CXX_ERROR(logger_, "NULL pointer");
+    return;
+  }
+  (*on_driver_distraction)[strings::params][strings::message_type] =
+      static_cast<int32_t>(application_manager::MessageType::kNotification);
+  (*on_driver_distraction)[strings::params][strings::function_id] =
+      mobile_api::FunctionID::OnDriverDistractionID;
+  (*on_driver_distraction)[strings::msg_params][mobile_notification::state] =
+      distracting_driver_state();
+  (*on_driver_distraction)[strings::params][strings::connection_key] =
+      application->app_id();
+  application->PushMobileMessage(on_driver_distraction);
 }
 
 protocol_handler::MajorProtocolVersion
