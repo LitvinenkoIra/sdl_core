@@ -449,11 +449,6 @@ class PolicyHandler : public PolicyHandlerInterface,
   void SetPolicyManager(utils::SharedPtr<PolicyManager> pm) {
     policy_manager_ = pm;
   }
-
-  AppIds& last_used_app_ids() {
-    return last_used_app_ids_;
-  }
-
 #endif  // BUILD_TESTS
 
 #ifdef ENABLE_SECURITY
@@ -616,7 +611,6 @@ class PolicyHandler : public PolicyHandlerInterface,
   mutable sync_primitives::RWLock policy_manager_lock_;
   utils::SharedPtr<PolicyManager> policy_manager_;
   void* dl_handle_;
-  AppIds last_used_app_ids_;
   utils::SharedPtr<PolicyEventObserver> event_observer_;
   uint32_t last_activated_app_id_;
   std::string snapshot_file_path;
