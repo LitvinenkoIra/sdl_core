@@ -71,7 +71,7 @@ class PolicyManagerImpl : public PolicyManager {
                              EndpointUrls& out_end_points);
 
   virtual std::string GetLockScreenIconUrl() const;
-  virtual bool RequestPTUpdate();
+  virtual BinaryMessageSptr RequestPTUpdate();
   virtual void CheckPermissions(const PTString& device_id,
                                 const PTString& app_id,
                                 const PTString& hmi_level,
