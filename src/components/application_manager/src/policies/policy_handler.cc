@@ -1020,12 +1020,26 @@ void PolicyHandler::OnPendingPermissionChange(
   }
 }
 
-bool PolicyHandler::SendMessageToSDK(const BinaryMessage& pt_string,
-                                     const std::string& url) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  POLICY_LIB_CHECK(false);
+const std::string PolicyHandler::ChooseUrl() {
+  EndpointUrls urls;
+  policy_manager_->GetUpdateUrls("0x07", urls);
 
-  uint32_t app_id = GetAppIdForSending();
+  if (urls.empty()) {
+    LOG4CXX_ERROR(logger_, "Service URLs are empty! NOT sending PT to mobile!");
+     return std::string();
+  }
+  AppIdURL app_url = policy_manager_->GetNextUpdateUrl(urls);
+  while (!IsUrlAppIdValid(app_url.first, urls)) {
+    app_url = policy_manager_->GetNextUpdateUrl(urls);
+  }
+  const std::string& url = urls[app_url.first].url[app_url.second];
+  return url;
+}
+
+u_int32_t PolicyHandler::ChooseApplication() {
+  LOG4CXX_AUTO_TRACE(logger_);
+
+  u_int32_t app_id = GetAppIdForSending();
 
   ApplicationSharedPtr app = application_manager_.application(app_id);
 
@@ -1034,7 +1048,7 @@ bool PolicyHandler::SendMessageToSDK(const BinaryMessage& pt_string,
                  "There is no registered application with "
                  "connection key '"
                      << app_id << "'");
-    return false;
+    return -1;
   }
 
   const std::string& mobile_app_id = app->policy_app_id();
@@ -1043,6 +1057,20 @@ bool PolicyHandler::SendMessageToSDK(const BinaryMessage& pt_string,
                  "Application with connection key '"
                      << app_id << "'"
                                   " has no application id.");
+    return -1;
+  }
+
+  return app_id;
+}
+
+bool PolicyHandler::SendMessageToSDK(const BinaryMessage& pt_string,
+                                     const std::string& url) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  POLICY_LIB_CHECK(false);
+
+  u_int32_t app_id = ChooseApplication();
+
+  if (!app_id) {
     return false;
   }
 
@@ -1475,9 +1503,15 @@ void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
 
 void PolicyHandler::OnNextRetry() {
   LOG4CXX_AUTO_TRACE(logger_);
-  BinaryMessage binary_data;
-  file_system::ReadBinaryFile(snapshot_file_path, binary_data);
-  TriggerOnSystemRequest(binary_data);
+  const std::string url = ChooseUrl();
+  u_int32_t app_id = ChooseApplication();
+  if ((!app_id) || (url.empty())){
+    return;
+  }
+  MessageHelper::SendPolicySnapshotNotification(app_id,
+                                              snapshot_file_path,
+                                              url,
+                                              application_manager_);
   OnUpdateRequestSentToMobile();
 }
 #endif
@@ -1485,26 +1519,13 @@ void PolicyHandler::OnNextRetry() {
 #ifdef HTTP_MODE
 void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
   LOG4CXX_AUTO_TRACE(logger_);
-  TriggerOnSystemRequest(pt_string);
-}
-#endif
-
-void PolicyHandler::TriggerOnSystemRequest(const BinaryMessage& pt_string) {
-  EndpointUrls urls;
-  policy_manager_->GetUpdateUrls("0x07", urls);
-
-  if (urls.empty()) {
-    LOG4CXX_ERROR(logger_, "Service URLs are empty! NOT sending PT to mobile!");
+  const std::string url = ChooseUrl();
+  if (url.empty()) {
     return;
   }
-
-  AppIdURL app_url = policy_manager_->GetNextUpdateUrl(urls);
-  while (!IsUrlAppIdValid(app_url.first, urls)) {
-    app_url = policy_manager_->GetNextUpdateUrl(urls);
-  }
-  const std::string& url = urls[app_url.first].url[app_url.second];
   SendMessageToSDK(pt_string, url);
 }
+#endif
 
 bool PolicyHandler::GetPriority(const std::string& policy_app_id,
                                 std::string* priority) const {

@@ -651,7 +651,8 @@ class PolicyHandler : public PolicyHandlerInterface,
    * otherwise FALSE
    */
   bool IsUrlAppIdValid(const uint32_t app_idx, const EndpointUrls& urls) const;
-  void TriggerOnSystemRequest(const BinaryMessage& pt_string);
+  const std::string ChooseUrl();
+  u_int32_t ChooseApplication();
 
   DISALLOW_COPY_AND_ASSIGN(PolicyHandler);
 };

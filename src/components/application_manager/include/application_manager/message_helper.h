@@ -410,6 +410,12 @@ class MessageHelper {
       const std::string& url,
       ApplicationManager& app_mngr);
 
+  static void SendPolicySnapshotNotification(
+      uint32_t connection_key,
+      const std::string& snapshot_file_path,
+      const std::string& url,
+      ApplicationManager& app_mngr);
+
   static void SendSystemRequestNotification(
       uint32_t connection_key,
       NsSmartDeviceLink::NsSmartObjects::SmartObject& content,
