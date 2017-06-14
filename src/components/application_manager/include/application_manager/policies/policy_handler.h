@@ -52,6 +52,7 @@
 #include "utils/conditional_variable.h"
 #include "utils/rwlock.h"
 #include "utils/custom_string.h"
+#include "utils/file_system.h"
 #include "policy/usage_statistics/statistics_manager.h"
 #include "utils/threads/async_runner.h"
 #include "policy/policy_settings.h"
@@ -98,8 +99,11 @@ class PolicyHandler : public PolicyHandlerInterface,
   void OnSnapshotCreated(const BinaryMessage& pt_string,
                          const std::vector<int>& retry_delay_seconds,
                          uint32_t timeout_exchange) OVERRIDE;
-#else   // EXTERNAL_PROPRIETARY_MODE
+#else  // EXTERNAL_PROPRIETARY_MODE
   void OnSnapshotCreated(const BinaryMessage& pt_string) OVERRIDE;
+#ifdef PROPRIETARY_MODE
+  void OnNextRetry() OVERRIDE;
+#endif  // PROPRIETARY_MODE
 #endif  // EXTERNAL_PROPRIETARY_MODE
   virtual bool GetPriority(const std::string& policy_app_id,
                            std::string* priority) const OVERRIDE;
@@ -449,6 +453,7 @@ class PolicyHandler : public PolicyHandlerInterface,
   AppIds& last_used_app_ids() {
     return last_used_app_ids_;
   }
+
 #endif  // BUILD_TESTS
 
 #ifdef ENABLE_SECURITY
@@ -458,6 +463,8 @@ class PolicyHandler : public PolicyHandlerInterface,
   const PolicySettings& get_settings() const OVERRIDE;
 
   virtual void OnPTUFinished(const bool ptu_result) OVERRIDE;
+
+  void SaveShapshotFilePath(const std::string& filename) OVERRIDE;
 
  protected:
   /**
@@ -612,7 +619,7 @@ class PolicyHandler : public PolicyHandlerInterface,
   AppIds last_used_app_ids_;
   utils::SharedPtr<PolicyEventObserver> event_observer_;
   uint32_t last_activated_app_id_;
-
+  std::string snapshot_file_path;
   /**
    * @brief Contains device handles, which were sent for user consent to HMI
    */
@@ -621,6 +628,7 @@ class PolicyHandler : public PolicyHandlerInterface,
   inline bool CreateManager();
 
   typedef std::list<PolicyHandlerObserver*> HandlersCollection;
+  typedef std::vector<uint8_t> BinaryMessage;
   HandlersCollection listeners_;
   mutable sync_primitives::Lock listeners_lock_;
 
@@ -649,6 +657,7 @@ class PolicyHandler : public PolicyHandlerInterface,
    * otherwise FALSE
    */
   bool IsUrlAppIdValid(const uint32_t app_idx, const EndpointUrls& urls) const;
+  void TriggerOnSystemRequest(const BinaryMessage& pt_string);
 
   DISALLOW_COPY_AND_ASSIGN(PolicyHandler);
 };

@@ -82,6 +82,11 @@ class PolicyListener {
   virtual void OnSnapshotCreated(const BinaryMessage& pt_string) = 0;
 
   /**
+   * @brief Sends snapshot via OnSystemRequest to mobile.
+   */
+  virtual void OnNextRetry() = 0;
+
+  /**
    * @brief Make appropriate changes for related applications permissions and
    * notify them, if it possible
    * @param device_id Unique device id, which consent had been changed

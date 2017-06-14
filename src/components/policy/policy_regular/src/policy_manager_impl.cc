@@ -1121,8 +1121,8 @@ void PolicyManagerImpl::set_cache_manager(
 void PolicyManagerImpl::RetrySequence() {
   LOG4CXX_INFO(logger_, "Start new retry sequence");
 
-  BinaryMessageSptr pt_snapshot = RequestPTUpdate();
-  listener_->OnSnapshotCreated(*pt_snapshot);
+  listener_->OnNextRetry();
+
   uint32_t timeout = NextRetryTimeout();
 
   if (!timeout && timer_retry_sequence_.is_running()) {

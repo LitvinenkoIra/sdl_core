@@ -67,7 +67,7 @@ void OnSystemRequestNotification::Run() {
 
   RequestType::eType request_type = static_cast<RequestType::eType>(
       (*message_)[strings::msg_params][strings::request_type].asInt());
-  const policy::PolicyHandlerInterface& policy_handler =
+  policy::PolicyHandlerInterface& policy_handler =
       application_manager_.GetPolicyHandler();
   if (!policy_handler.IsRequestTypeAllowed(app->policy_app_id(),
                                            request_type)) {
@@ -90,6 +90,9 @@ void OnSystemRequestNotification::Run() {
     file_system::ReadBinaryFile(filename, binary_data);
 #if defined(PROPRIETARY_MODE)
     AddHeader(binary_data);
+    if (!filename.empty()) {
+      policy_handler.SaveShapshotFilePath(filename);
+    }
 #endif  // PROPRIETARY_MODE
 
 #if defined(PROPRIETARY_MODE) || defined(EXTERNAL_PROPRIETARY_MODE)

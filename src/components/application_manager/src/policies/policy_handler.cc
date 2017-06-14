@@ -796,6 +796,10 @@ void PolicyHandler::LinkAppsToDevice() {
   }
 }
 
+void PolicyHandler::SaveShapshotFilePath(const std::string& filename) {
+  snapshot_file_path = filename;
+}
+
 bool PolicyHandler::IsAppSuitableForPolicyUpdate(
     const Applications::value_type value) const {
   LOG4CXX_AUTO_TRACE(logger_);
@@ -1459,11 +1463,10 @@ void PolicyHandler::OnSnapshotCreated(
                                     application_manager_);
   }
 }
-#else  // EXTERNAL_PROPRIETARY_MODE
-void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  POLICY_LIB_CHECK_VOID();
+#endif
+
 #ifdef PROPRIETARY_MODE
+void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
   std::string policy_snapshot_full_path;
   if (!SaveSnapshot(pt_string, policy_snapshot_full_path)) {
     LOG4CXX_ERROR(logger_, "Snapshot processing skipped.");
@@ -1473,8 +1476,27 @@ void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
                                   TimeoutExchangeSec(),
                                   policy_manager_->RetrySequenceDelaysSeconds(),
                                   application_manager_);
-#else   // PROPRIETARY_MODE
-  LOG4CXX_ERROR(logger_, "HTTP policy");
+
+  OnUpdateRequestSentToMobile();
+}
+
+void PolicyHandler::OnNextRetry() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  BinaryMessage binary_data;
+  file_system::ReadBinaryFile(snapshot_file_path, binary_data);
+  TriggerOnSystemRequest(binary_data);
+  OnUpdateRequestSentToMobile();
+}
+#endif
+
+#ifdef HTTP_MODE
+void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
+  LOG4CXX_AUTO_TRACE(logger_);
+  TriggerOnSystemRequest(pt_string);
+}
+#endif
+
+void PolicyHandler::TriggerOnSystemRequest(const BinaryMessage& pt_string) {
   EndpointUrls urls;
   policy_manager_->GetUpdateUrls("0x07", urls);
 
@@ -1489,11 +1511,7 @@ void PolicyHandler::OnSnapshotCreated(const BinaryMessage& pt_string) {
   }
   const std::string& url = urls[app_url.first].url[app_url.second];
   SendMessageToSDK(pt_string, url);
-#endif  // PROPRIETARY_MODE
-  // reset update required false
-  OnUpdateRequestSentToMobile();
 }
-#endif  // EXTERNAL_PROPRIETARY_MODE
 
 bool PolicyHandler::GetPriority(const std::string& policy_app_id,
                                 std::string* priority) const {
