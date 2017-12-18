@@ -341,6 +341,23 @@ class ApplicationImpl : public virtual Application,
   AppExtensionPtr QueryInterface(AppExtensionUID uid) OVERRIDE;
 #endif
 
+  /**
+   * @breif Allows to save mobile's command smart object in order
+   * to perform this command later.
+   * @param mobile_message the message smart_object.
+   */
+  void PushMobileMessage(
+      smart_objects::SmartObjectSPtr mobile_message) OVERRIDE;
+
+  /**
+   * @breif Allows to obtain the whole list of pending commands in order to
+   * process them.
+   * @param mobile_message the messages array which is filled by the method.
+   * @Note After the method return the data internal messages array will be
+   * cleared.
+   */
+  void SwapMobileMessageQueue(MobileMessageQueue& mobile_messages) OVERRIDE;
+
  protected:
   /**
    * @brief Clean up application folder. Persistent files will stay
@@ -467,6 +484,10 @@ class ApplicationImpl : public virtual Application,
   sync_primitives::Lock button_lock_;
   std::string folder_name_;
   ApplicationManager& application_manager_;
+
+  sync_primitives::Lock mobile_message_lock_;
+  MobileMessageQueue mobile_message_queue_;
+
   DISALLOW_COPY_AND_ASSIGN(ApplicationImpl);
 };
 
