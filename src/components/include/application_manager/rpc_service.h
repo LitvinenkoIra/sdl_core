@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Ford Motor Company
+ * Copyright (c) 2018, Ford Motor Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,26 +30,32 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "application_manager/commands/hmi/sdl_get_list_of_permissions_response.h"
-#include "application_manager/rpc_service.h"
+#ifndef SRC_COMPONENTS_INCLUDE_APPLICATION_MANAGER_RPC_SERVICE_H
+#define SRC_COMPONENTS_INCLUDE_APPLICATION_MANAGER_RPC_SERVICE_H
+
+#include "application_manager/commands/command.h"
+#include "application_manager/message.h"
 
 namespace application_manager {
+namespace rpc_service {
 
-namespace commands {
+class RPCService {
+ public:
+  virtual ~RPCService() {}
 
-SDLGetListOfPermissionsResponse::SDLGetListOfPermissionsResponse(
-    const MessageSharedPtr& message, ApplicationManager& application_manager)
-    : ResponseToHMI(message, application_manager) {}
+  virtual bool ManageMobileCommand(const commands::MessageSharedPtr message,
+                                   commands::Command::CommandOrigin origin) = 0;
+  virtual bool ManageHMICommand(const commands::MessageSharedPtr message) = 0;
+  virtual void SendMessageToMobile(const commands::MessageSharedPtr message,
+                                   bool final_message = false) = 0;
+  virtual void SendMessageToHMI(const commands::MessageSharedPtr message) = 0;
 
-SDLGetListOfPermissionsResponse::~SDLGetListOfPermissionsResponse() {}
-
-void SDLGetListOfPermissionsResponse::Run() {
-  LOG4CXX_AUTO_TRACE(logger_);
-  (*message_)[strings::params][strings::protocol_type] = hmi_protocol_type_;
-  (*message_)[strings::params][strings::protocol_version] = protocol_version_;
-
-  application_manager_.GetRPCService().SendMessageToHMI(message_);
-}
-
-}  // namespace commands
+#ifdef SDL_REMOTE_CONTROL
+  virtual void SendPostMessageToMobile(const MessagePtr& message) = 0;
+  virtual void SendPostMessageToHMI(const MessagePtr& message) = 0;
+#endif  // SDL_REMOTE_CONTROL
+};
+}  // namespace rpc_service
 }  // namespace application_manager
+
+#endif  // SRC_COMPONENTS_INCLUDE_APPLICATION_MANAGER_RPC_SERVICE_H
