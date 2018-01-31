@@ -109,7 +109,8 @@ TEST_F(SubscribeWayPointsRequestTest, OnEvent_SUCCESS) {
   {
     InSequence dummy;
     EXPECT_CALL(app_mngr_, SubscribeAppForWayPoints(_));
-    EXPECT_CALL(app_mngr_, ManageMobileCommand(_, _));
+    ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
+    EXPECT_CALL(rpc_service_, ManageMobileCommand(_, _));
     EXPECT_CALL(*app, UpdateHash());
   }
 

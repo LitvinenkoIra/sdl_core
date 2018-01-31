@@ -85,9 +85,9 @@ TEST_F(UnSubscribeWayPointsRequestTest,
        Run_ApplicationIsNotRegistered_UNSUCCESS) {
   EXPECT_CALL(app_mngr_, application(_))
       .WillOnce(Return(ApplicationSharedPtr()));
-
+  ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
   EXPECT_CALL(
-      app_mngr_,
+      rpc_service_,
       ManageMobileCommand(
           MobileResultCodeIs(mobile_result::APPLICATION_NOT_REGISTERED), _));
 
@@ -104,9 +104,9 @@ TEST_F(UnSubscribeWayPointsRequestTest,
 
   EXPECT_CALL(app_mngr_, IsAppSubscribedForWayPoints(kAppId))
       .WillOnce(Return(false));
-
+  ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
   EXPECT_CALL(
-      app_mngr_,
+      rpc_service_,
       ManageMobileCommand(MobileResultCodeIs(mobile_result::IGNORED), _));
 
   command_->Run();
@@ -121,8 +121,8 @@ TEST_F(UnSubscribeWayPointsRequestTest, Run_AppSubscribedForWayPoints_SUCCESS) {
 
   EXPECT_CALL(app_mngr_, IsAppSubscribedForWayPoints(kAppId))
       .WillOnce(Return(true));
-
-  EXPECT_CALL(app_mngr_,
+  ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
+  EXPECT_CALL(rpc_service_,
               ManageHMICommand(HMIResultCodeIs(
                   hmi_apis::FunctionID::Navigation_UnsubscribeWayPoints)));
 
@@ -133,8 +133,8 @@ TEST_F(UnSubscribeWayPointsRequestTest, OnEvent_UnknownEvent_UNSUCCESS) {
   MockAppPtr mock_app(CreateMockApp());
   EXPECT_CALL(app_mngr_, application(kConnectionKey))
       .WillOnce(Return(mock_app));
-
-  EXPECT_CALL(app_mngr_, ManageMobileCommand(_, _)).Times(0);
+  EXPECT_CALL(app_mngr_, GetRPCService()).Times(0);
+  EXPECT_CALL(rpc_service_, ManageMobileCommand(_, _)).Times(0);
 
   Event event(hmi_apis::FunctionID::INVALID_ENUM);
 
@@ -157,9 +157,9 @@ TEST_F(UnSubscribeWayPointsRequestTest,
   EXPECT_CALL(*mock_app, app_id()).WillOnce(Return(kAppId));
 
   EXPECT_CALL(app_mngr_, UnsubscribeAppFromWayPoints(kAppId));
-
+  ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
   EXPECT_CALL(
-      app_mngr_,
+      rpc_service_,
       ManageMobileCommand(MobileResultCodeIs(mobile_result::SUCCESS), _));
 
   command_->on_event(event);
