@@ -129,6 +129,7 @@ class DeleteCommandRequestTest
     ON_CALL(*mock_app_, app_id()).WillByDefault(Return(kConnectionKey));
     ON_CALL(app_mngr_, hmi_interfaces())
         .WillByDefault(ReturnRef(hmi_interfaces_));
+    ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
   }
 
   NiceMock<MockHmiInterfaces> hmi_interfaces_;
@@ -161,9 +162,6 @@ TEST_F(DeleteCommandRequestTest,
   ON_CALL(*mock_app_, FindCommand(kCommandId))
       .WillByDefault(Return(test_msg.get()));
   ON_CALL(*mock_app_, get_grammar_id()).WillByDefault(Return(kConnectionKey));
-  EXPECT_CALL(app_mngr_, GetRPCService())
-      .Times(5)
-      .WillRepeatedly(ReturnRef(rpc_service_));
   MessageSharedPtr msg(CreateMessage(smart_objects::SmartType_Map));
   (*msg)[am::strings::params][am::hmi_response::code] =
       hmi_apis::Common_Result::SUCCESS;
@@ -186,7 +184,6 @@ TEST_F(DeleteCommandRequestTest,
   EXPECT_CALL(*mock_app_, UpdateHash());
 
   MessageSharedPtr vr_command_result;
-  ON_CALL(app_mngr_, GetRPCService()).WillByDefault(ReturnRef(rpc_service_));
   EXPECT_CALL(
       rpc_service_,
       ManageMobileCommand(_, am::commands::Command::CommandOrigin::ORIGIN_SDL))
@@ -223,9 +220,6 @@ TEST_F(DeleteCommandRequestTest,
       .WillByDefault(Return(am::HmiInterfaces::STATE_AVAILABLE));
   ON_CALL(*app, FindCommand(kCommandId)).WillByDefault(Return(test_msg.get()));
   ON_CALL(*app, get_grammar_id()).WillByDefault(Return(kConnectionKey));
-  EXPECT_CALL(app_mngr_, GetRPCService())
-      .Times(4)
-      .WillRepeatedly(ReturnRef(rpc_service_));
   MessageSharedPtr msg(CreateMessage(smart_objects::SmartType_Map));
   (*msg)[am::strings::params][am::hmi_response::code] =
       hmi_apis::Common_Result::SUCCESS;
