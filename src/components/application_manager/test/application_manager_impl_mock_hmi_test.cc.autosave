@@ -182,12 +182,10 @@ TEST_F(ApplicationManagerImplMockHmiTest,
       device_id + 1, "USB_device", "USB_serial", "USB_IOS");
 
   MockCommandFactory mock_command_factory;
-  // MockHMICommandFactory::mock_hmi_command_factory();
 
   // Skip sending notification on device switching as it is not the goal here
   EXPECT_CALL(mock_command_factory, CreateCommand(_, _))
       .WillOnce(Return(utils::SharedPtr<commands::Command>()));
-  // utils::SharedPtr<commands::Command>()));
 
   app_manager_impl_->OnDeviceSwitchingStart(bt, usb);
 
