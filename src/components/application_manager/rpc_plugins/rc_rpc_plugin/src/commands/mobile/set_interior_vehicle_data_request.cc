@@ -24,6 +24,7 @@ std::vector<std::string> GetModuleReadOnlyParams(
     module_ro_params.push_back(kSignalStrength);
     module_ro_params.push_back(kSignalChangeThreshold);
     module_ro_params.push_back(kState);
+    module_ro_params.push_back(kSisData);
   }
   return module_ro_params;
 }
@@ -41,6 +42,10 @@ const std::map<std::string, std::string> GetModuleDataToCapabilitiesMapping() {
   mapping["dualModeEnable"] = "dualModeEnableAvailable";
   mapping["acMaxEnable"] = "acMaxEnableAvailable";
   mapping["ventilationMode"] = "ventilationModeAvailable";
+  mapping["heatedSteeringWheelEnable"] = "heatedSteeringWheelAvailable";
+  mapping["heatedWindshieldEnable"] = "heatedWindshieldAvailable";
+  mapping["heatedMirrorsEnable"] = "heatedMirrorsAvailable";
+  mapping["heatedRearWindowEnable"] = "heatedRearWindowAvailable";
 
   // radio
   mapping["band"] = "radioBandAvailable";
@@ -53,6 +58,24 @@ const std::map<std::string, std::string> GetModuleDataToCapabilitiesMapping() {
   mapping["signalChangeThreshold"] = "signalChangeThresholdAvailable";
   mapping["radioEnable"] = "radioEnableAvailable";
   mapping["state"] = "stateAvailable";
+  mapping["sisData"] = "sisDataAvailable";
+
+  //audio
+  mapping["source"] = "sourceAvailable";
+  mapping["keepContext"] = "sourceAvailable";
+  mapping["volume"] = "volumeAvailable";
+  mapping["equalizerSettings"] = "equalizerAvailable";
+
+  //light
+  mapping["density"] = "densityAvailable";
+  mapping["sRGBColor"] = "sRGBColorSpaceAvailable";
+
+
+  //hmi settings
+  mapping["distanceUnit"] = "distanceUnitAvailable";
+  mapping["temperatureUnit"] = "temperatureUnitAvailable";
+  mapping["displayMode"] = "displayModeUnitAvailable";
+
 
   return mapping;
 }
@@ -110,33 +133,32 @@ bool CheckControlDataByCapabilities(
 }
 
 bool CheckIfModuleDataExistInCapabilities(
-    const smart_objects::SmartObject& rc_capabilities,
-    const smart_objects::SmartObject& module_data) {
+        const smart_objects::SmartObject& rc_capabilities,
+        const smart_objects::SmartObject& module_data) {
+    LOG4CXX_DEBUG(logger_, "in CheckIfModuleDataExistInCapabilities");
   LOG4CXX_AUTO_TRACE(logger_);
-  bool is_radio_data_valid = true;
-  bool is_climate_data_valid = true;
-  if (module_data.keyExists(message_params::kRadioControlData)) {
-    if (!rc_capabilities.keyExists(strings::kradioControlCapabilities)) {
-      LOG4CXX_DEBUG(logger_, " Radio control capabilities not present");
-      return false;
-    }
-    const smart_objects::SmartObject& radio_caps =
-        rc_capabilities[strings::kradioControlCapabilities];
-    is_radio_data_valid = CheckControlDataByCapabilities(
-        radio_caps, module_data[strings::kRadioControlData]);
+  std::map<std::string, std::string> params = {
+      {message_params::kRadioControlData, strings::kradioControlCapabilities},
+      {message_params::kClimateControlData, strings::kclimateControlCapabilities},
+      {message_params::kAudioControlData, strings::kaudioControlCapabilities},
+      {message_params::kLightControlData, strings::klightControlCapabilities},
+      {message_params::kHmiSettingsControlData, strings::khmiSettingsControlCapabilities}
+  };
+  bool is_module_data_valid = false;
+  auto it = params.begin();
+  for (; params.end() != it; ++it){
+      if (module_data.keyExists(it->first)){
+          if (!rc_capabilities.keyExists(it->second)) {
+            LOG4CXX_DEBUG(logger_, it->first << " capabilities not present");
+            return false;
+          }
+          const smart_objects::SmartObject& caps =
+              rc_capabilities[it->second];
+          is_module_data_valid = CheckControlDataByCapabilities(
+              caps, module_data[it->first]);
+      }
   }
-  if (module_data.keyExists(message_params::kClimateControlData)) {
-    if (!rc_capabilities.keyExists(strings::kclimateControlCapabilities)) {
-      LOG4CXX_DEBUG(logger_, " Climate control capabilities not present");
-      return false;
-    }
-    const smart_objects::SmartObject& climate_caps =
-        rc_capabilities[strings::kclimateControlCapabilities];
-    is_climate_data_valid = CheckControlDataByCapabilities(
-        climate_caps, module_data[strings::kClimateControlData]);
-  }
-
-  return is_radio_data_valid && is_climate_data_valid;
+  return is_module_data_valid;
 }
 
 void SetInteriorVehicleDataRequest::Execute() {
@@ -234,8 +256,18 @@ const smart_objects::SmartObject& SetInteriorVehicleDataRequest::ControlData(
 
   if (enums_value::kRadio == module) {
     return module_data[message_params::kRadioControlData];
-  } else {
+  }
+  if (enums_value::kClimate == module) {
     return module_data[message_params::kClimateControlData];
+  }
+  if (enums_value::kAudio == module) {
+    return module_data[message_params::kAudioControlData];
+  }
+  if (enums_value::kLight == module) {
+    return module_data[message_params::kLightControlData];
+  }
+  else {
+    return module_data[message_params::kHmiSettingsControlData];
   }
 }
 

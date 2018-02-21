@@ -40,6 +40,9 @@ namespace strings {
 const char kclimateControlCapabilities[] = "climateControlCapabilities";
 const char kradioControlCapabilities[] = "radioControlCapabilities";
 const char kbuttonCapabilities[] = "buttonCapabilities";
+const char kaudioControlCapabilities[] = "audioControlCapabilities";
+const char klightControlCapabilities[] = "lightControlCapabilities";
+const char khmiSettingsControlCapabilities[] = "hmiSettingsControlCapabilities";
 // RemoteControlCapabilities constants
 
 const char kRadioControlData[] = "radioControlData";
@@ -136,6 +139,7 @@ const char kSignalStrength[] = "signalStrength";
 const char kSignalChangeThreshold[] = "signalChangeThreshold";
 const char kRadioEnable[] = "radioEnable";
 const char kState[] = "state";
+const char kSisData[] = "sisData";
 // RadioControlData struct
 
 // ClimateControlData struct
@@ -150,11 +154,21 @@ const char kDefrostZone[] = "defrostZone";
 const char kDualModeEnable[] = "dualModeEnable";
 const char kACMaxEnable[] = "acMaxEnable";
 const char kVentilationMode[] = "ventilationMode";
+const char kHeatedSteeringWheelEnable[] = "heatedSteeringWheelEnable";
+const char kHeatedWindshieldEnable[] = "heatedWindshieldEnable";
+const char kHeatedRearWindowEnable[] = "heatedRearWindowEnable";
+const char kHeatedMirrorsEnable[] = "heatedMirrorsEnable";
 // ClimateControlData struct
+
+//LightControlData
+const char kLightState[] = "lightState";
 
 // ModuleData struct
 const char kRadioControlData[] = "radioControlData";
 const char kClimateControlData[] = "climateControlData";
+const char kAudioControlData[] = "audioControlData";
+const char kLightControlData[] = "lightControlData";
+const char kHmiSettingsControlData[] = "hmiSettingsControlData";
 // ModuleData struct
 
 const char kHMIAppID[] = "appID";
@@ -168,6 +182,9 @@ namespace enums_value {
 // ModuleType enum
 const char kClimate[] = "CLIMATE";
 const char kRadio[] = "RADIO";
+const char kAudio[] = "AUDIO";
+const char kLight[] = "LIGHT";
+const char kHmiSettings[] = "HMI_SETTINGS";
 // ModuleType enum
 
 // RadioBand enum
