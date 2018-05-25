@@ -188,7 +188,6 @@ class ApplicationManagerImpl
   void SendHMIStatusNotification(
       const utils::SharedPtr<Application> app) OVERRIDE;
 
-#ifdef SDL_REMOTE_CONTROL
   ApplicationSharedPtr application(
       const std::string& device_id,
       const std::string& policy_app_id) const OVERRIDE;
@@ -203,12 +202,6 @@ class ApplicationManagerImpl
    */
   void ChangeAppsHMILevel(uint32_t app_id, mobile_apis::HMILevel::eType level);
 
-  void Erase(ApplicationSharedPtr app_to_remove) {
-    DCHECK(app_to_remove);
-    app_to_remove->RemoveExtensions();
-    applications_.erase(app_to_remove);
-  }
-
   virtual plugin_manager::RPCPluginManager& GetPluginManager() OVERRIDE {
     DCHECK(plugin_manager_);
     return *plugin_manager_;
@@ -216,9 +209,6 @@ class ApplicationManagerImpl
 
   std::vector<std::string> devices(
       const std::string& policy_app_id) const OVERRIDE;
-
-#endif  // SDL_REMOTE_CONTROL
-
   /**
    * @brief Checks if application with the same HMI type
    *        (media, voice communication or navi) exists
@@ -1604,27 +1594,6 @@ class ApplicationManagerImpl
   protocol_handler::ProtocolHandler* protocol_handler_;
   request_controller::RequestController request_ctrl_;
   std::unique_ptr<plugin_manager::RPCPluginManager> plugin_manager_;
-
-#ifdef SDL_REMOTE_CONTROL
-
-  /**
-   * @brief Map contains apps with HMI state before incoming call
-   * After incoming call ends previous HMI state must restore
-   *
-   */
-  struct AppState {
-    AppState(const mobile_apis::HMILevel::eType& level,
-             const mobile_apis::AudioStreamingState::eType& streaming_state,
-             const mobile_apis::SystemContext::eType& context)
-        : hmi_level(level)
-        , audio_streaming_state(streaming_state)
-        , system_context(context) {}
-
-    mobile_apis::HMILevel::eType hmi_level;
-    mobile_apis::AudioStreamingState::eType audio_streaming_state;
-    mobile_apis::SystemContext::eType system_context;
-  };
-#endif  // SDL_REMOTE_CONTROL
 
   hmi_apis::HMI_API* hmi_so_factory_;
   mobile_apis::MOBILE_API* mobile_so_factory_;

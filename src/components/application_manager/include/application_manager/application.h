@@ -852,21 +852,6 @@ class Application : public virtual InitialApplicationData,
    */
   virtual void SwapMobileMessageQueue(MobileMessageQueue& mobile_messages) = 0;
 
-#ifdef SDL_REMOTE_CONTROL
-  /**
-   * @brief set_system_context Set system context for application
-   * @param system_context Current context
-   */
-  virtual void set_system_context(
-      const mobile_api::SystemContext::eType& system_context) = 0;
-
-  /**
-   * @brief set_audio_streaming_state Set audio streaming state for application
-   * @param state Current audio streaming state
-   */
-  virtual void set_audio_streaming_state(
-      const mobile_api::AudioStreamingState::eType& state) = 0;
-
   /**
    * @brief set_hmi_level Set HMI level for application
    * @param hmi_level Current HMI level
@@ -893,18 +878,6 @@ class Application : public virtual InitialApplicationData,
    * @return true if success, false if extension is not present
    */
   virtual bool RemoveExtension(AppExtensionUID uid) = 0;
-
-  /**
-   * @brief Removes all extensions
-   */
-  virtual void RemoveExtensions() = 0;
-
-  /**
-   * @brief Get list of subscriptions to vehicle info notifications
-   * @return list of subscriptions to vehicle info notifications
-   */
-  virtual const VehicleInfoSubscriptions& SubscribesIVI() const = 0;
-#endif  // SDL_REMOTE_CONTROL
 
  protected:
   mutable sync_primitives::Lock hmi_states_lock_;

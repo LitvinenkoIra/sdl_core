@@ -305,14 +305,6 @@ class MockApplication : public ::application_manager::Application {
       SwapMobileMessageQueue,
       void(::application_manager::MobileMessageQueue& mobile_messages));
 
-#ifdef SDL_REMOTE_CONTROL
-  MOCK_METHOD1(
-      set_system_context,
-      void(const application_manager::mobile_api::SystemContext::eType&));
-  MOCK_METHOD1(
-      set_audio_streaming_state,
-      void(const application_manager::mobile_api::AudioStreamingState::eType&
-               state));
   MOCK_METHOD1(IsSubscribedToInteriorVehicleData,
                bool(smart_objects::SmartObject module));
   MOCK_METHOD1(SubscribeToInteriorVehicleData,
@@ -328,13 +320,8 @@ class MockApplication : public ::application_manager::Application {
   MOCK_METHOD1(AddExtension,
                bool(application_manager::AppExtensionPtr extention));
   MOCK_METHOD1(RemoveExtension, bool(application_manager::AppExtensionUID uid));
-  MOCK_METHOD0(RemoveExtensions, void());
-  MOCK_CONST_METHOD0(SubscribesIVI,
-                     const application_manager::VehicleInfoSubscriptions&());
   MOCK_CONST_METHOD0(is_remote_control_supported, bool());
   MOCK_METHOD1(set_remote_control_supported, void(const bool allow));
-
-#endif  // SDL_REMOTE_CONTROL
 };
 
 }  // namespace application_manager_test

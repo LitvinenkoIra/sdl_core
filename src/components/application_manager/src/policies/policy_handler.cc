@@ -1955,73 +1955,15 @@ bool PolicyHandler::IsUrlAppIdValid(const uint32_t app_idx,
   return ((is_registered && !is_empty_urls) || is_default);
 }
 
-#ifdef SDL_REMOTE_CONTROL
-
 std::vector<std::string> PolicyHandler::GetDevicesIds(
     const std::string& policy_app_id) {
   return application_manager_.devices(policy_app_id);
-}
-
-void PolicyHandler::UpdateHMILevel(ApplicationSharedPtr app,
-                                   mobile_apis::HMILevel::eType level) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  DCHECK_OR_RETURN_VOID(app);
-  if (app->hmi_level() == mobile_apis::HMILevel::HMI_NONE) {
-    // If default is FULL, send request to HMI. Notification to mobile will be
-    // sent on response receiving.
-    if (mobile_apis::HMILevel::HMI_FULL == level) {
-      MessageHelper::SendActivateAppToHMI(app->app_id(), application_manager_);
-    } else {
-      LOG4CXX_INFO(logger_,
-                   "Changing hmi level of application "
-                       << app->app_id() << " to default hmi level " << level);
-      // Set application hmi level
-      application_manager_.ChangeAppsHMILevel(app->app_id(), level);
-      // If hmi Level is full, it will be seted after ActivateApp response
-      MessageHelper::SendHMIStatusNotification(*app, application_manager_);
-    }
-  }
 }
 
 bool PolicyHandler::CheckModule(const PTString& app_id,
                                 const PTString& module) {
   POLICY_LIB_CHECK(false);
   return policy_manager_->CheckModule(app_id, module);
-}
-
-void PolicyHandler::OnRemoteAppPermissionsChanged(
-    const std::string& device_id, const std::string& application_id) {
-  POLICY_LIB_CHECK_VOID();
-  policy_manager_->SendAppPermissionsChanged(device_id, application_id);
-}
-
-void PolicyHandler::OnUpdateHMIStatus(const std::string& device_id,
-                                      const std::string& policy_app_id,
-                                      const std::string& hmi_level) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  ApplicationSharedPtr app =
-      application_manager_.application(device_id, policy_app_id);
-  if (!app) {
-    LOG4CXX_WARN(logger_,
-                 "Could not find application: " << device_id << " - "
-                                                << policy_app_id);
-    return;
-  }
-  mobile_apis::HMILevel::eType level =
-      MessageHelper::StringToHMILevel(hmi_level);
-  if (mobile_apis::HMILevel::INVALID_ENUM == level) {
-    LOG4CXX_WARN(logger_,
-                 "Couldn't convert default hmi level " << hmi_level
-                                                       << " to enum.");
-    return;
-  }
-
-  LOG4CXX_INFO(logger_,
-               "Changing hmi level of application "
-                   << app->app_id() << " to default hmi level " << level);
-  // Set application hmi level
-  application_manager_.ChangeAppsHMILevel(app->app_id(), level);
-  MessageHelper::SendHMIStatusNotification(*app, application_manager_);
 }
 
 bool PolicyHandler::GetModuleTypes(const std::string& policy_app_id,
@@ -2067,28 +2009,4 @@ bool PolicyHandler::CheckHMIType(const std::string& application_id,
       ret ? policy_hmi_types : additional_hmi_types;
   return std::find(hmi_types.begin(), hmi_types.end(), hmi) != hmi_types.end();
 }
-
-void PolicyHandler::OnUpdateHMILevel(const std::string& device_id,
-                                     const std::string& policy_app_id,
-                                     const std::string& hmi_level) {
-  LOG4CXX_AUTO_TRACE(logger_);
-  ApplicationSharedPtr app =
-      application_manager_.application(device_id, policy_app_id);
-  if (!app) {
-    LOG4CXX_WARN(logger_,
-                 "Could not find application: " << device_id << " - "
-                                                << policy_app_id);
-    return;
-  }
-  mobile_apis::HMILevel::eType level =
-      MessageHelper::StringToHMILevel(hmi_level);
-  if (mobile_apis::HMILevel::INVALID_ENUM == level) {
-    LOG4CXX_WARN(logger_,
-                 "Couldn't convert default hmi level " << hmi_level
-                                                       << " to enum.");
-    return;
-  }
-  UpdateHMILevel(app, level);
-}
-#endif  // SDL_REMOTE_CONTROL
 }  //  namespace policy

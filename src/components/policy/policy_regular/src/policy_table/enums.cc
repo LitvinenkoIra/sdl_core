@@ -605,7 +605,7 @@ bool EnumFromJsonString(const std::string& literal, RequestType* result) {
   }
 }
 
-#ifdef SDL_REMOTE_CONTROL
+
 bool IsValidEnum(ModuleType val) {
   switch (val) {
     case MT_CLIMATE:
@@ -638,7 +638,7 @@ bool EnumFromJsonString(const std::string& literal, ModuleType* result) {
     return false;
   }
 }
-#endif  // SDL_REMOTE_CONTROL
+
 
 const std::string kDefaultApp = "default";
 const std::string kPreDataConsentApp = "pre_DataConsent";

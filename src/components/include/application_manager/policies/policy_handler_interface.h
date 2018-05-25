@@ -434,8 +434,6 @@ class PolicyHandlerInterface {
    */
   virtual void OnDeviceSwitching(const std::string& device_id_from,
                                  const std::string& device_id_to) = 0;
-
-#ifdef SDL_REMOTE_CONTROL
   /**
    * @brief Sets HMI default type for specified application
    * @param application_id ID application
@@ -455,17 +453,6 @@ class PolicyHandlerInterface {
   virtual bool CheckHMIType(const std::string& application_id,
                             mobile_apis::AppHMIType::eType hmi,
                             const smart_objects::SmartObject* app_types) = 0;
-
-  /**
-   * Notifies about changing HMI level
-   * @param device_id unique identifier of device
-   * @param policy_app_id unique identifier of application in policy
-   * @param hmi_level default HMI level for this application
-   */
-  virtual void OnUpdateHMILevel(const std::string& device_id,
-                                const std::string& policy_app_id,
-                                const std::string& hmi_level) = 0;
-
   /**
    * Checks if module for application is present in policy table
    * @param app_id id of application
@@ -473,25 +460,6 @@ class PolicyHandlerInterface {
    * @return true if module is present, otherwise - false
    */
   virtual bool CheckModule(const PTString& app_id, const PTString& module) = 0;
-
-  /**
-   * @brief Notifies Remote apps about change in permissions
-   * @param device_id Device on which app is running
-   * @param application_id ID of app whose permissions are changed
-   */
-  virtual void OnRemoteAppPermissionsChanged(
-      const std::string& device_id, const std::string& application_id) = 0;
-
-  /**
-   * @brief Notifies Remote apps about change in HMI status
-   * @param device_id Device on which app is running
-   * @param policy_app_id ID of application
-   * @param hmi_level new HMI level for this application
-   */
-  virtual void OnUpdateHMIStatus(const std::string& device_id,
-                                 const std::string& policy_app_id,
-                                 const std::string& hmi_level) = 0;
-
   /**
    * Gets all allowed module types
    * @param app_id unique identifier of application
@@ -500,7 +468,6 @@ class PolicyHandlerInterface {
    */
   virtual bool GetModuleTypes(const std::string& policy_app_id,
                               std::vector<std::string>* modules) const = 0;
-#endif  // SDL_REMOTE_CONTROL
 
  private:
 /**

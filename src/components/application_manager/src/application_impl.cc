@@ -1049,26 +1049,6 @@ void ApplicationImpl::UnsubscribeFromSoftButtons(int32_t cmd_id) {
   }
 }
 
-#ifdef SDL_REMOTE_CONTROL
-
-void ApplicationImpl::set_system_context(
-    const mobile_api::SystemContext::eType& system_context) {
-  const HmiStatePtr hmi_state = CurrentHmiState();
-  hmi_state->set_system_context(system_context);
-}
-
-void ApplicationImpl::set_audio_streaming_state(
-    const mobile_api::AudioStreamingState::eType& state) {
-  if (!(is_media_application() || is_navi()) &&
-      state != mobile_api::AudioStreamingState::NOT_AUDIBLE) {
-    LOG4CXX_WARN(logger_,
-                 "Trying to set audio streaming state"
-                 " for non-media application to different from NOT_AUDIBLE");
-    return;
-  }
-  CurrentHmiState()->set_audio_streaming_state(state);
-}
-
 void ApplicationImpl::set_hmi_level(
     const mobile_api::HMILevel::eType& new_hmi_level) {
   using namespace mobile_apis;
@@ -1084,10 +1064,6 @@ void ApplicationImpl::set_hmi_level(
   application_manager_.state_controller().SetRegularState(app, new_hmi_level);
   LOG4CXX_INFO(logger_, "hmi_level = " << new_hmi_level);
   usage_report_.RecordHmiStateChanged(new_hmi_level);
-}
-
-const VehicleInfoSubscriptions& ApplicationImpl::SubscribesIVI() const {
-  return subscribed_vehicle_info_;
 }
 
 AppExtensionPtr ApplicationImpl::QueryInterface(AppExtensionUID uid) {
@@ -1117,11 +1093,6 @@ bool ApplicationImpl::RemoveExtension(AppExtensionUID uid) {
 
   return it != extensions_.end();
 }
-
-void ApplicationImpl::RemoveExtensions() {
-  //  application_manager_.GetPluginManager().RemoveAppExtension(app_id_);
-}
-#endif  // SDL_REMOTE_CONTROL
 
 void ApplicationImpl::PushMobileMessage(
     smart_objects::SmartObjectSPtr mobile_message) {
