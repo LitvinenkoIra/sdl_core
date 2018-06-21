@@ -30,45 +30,36 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_COMMANDS_HMI_ON_SYSTEM_TIME_READY_NOTIFICATION_H_
-#define SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_COMMANDS_HMI_ON_SYSTEM_TIME_READY_NOTIFICATION_H_
+#include "sdl_rpc_plugin/commands/hmi/basic_communication_get_system_time_response.h"
+#include "utils/logger.h"
 
-#include "application_manager/commands/hmi/notification_from_hmi.h"
-#include "application_manager/application_manager_impl.h"
+CREATE_LOGGERPTR_GLOBAL(logger_, "Commands")
 
-namespace application_manager {
-
+namespace sdl_rpc_plugin {
+using namespace application_manager;
 namespace commands {
 
-/**
- * @brief OnSystemTimeReadyNotification command class.
- * Notifies SDL whenever system time module is ready.
- * It could be GPS or any other module which is allows
- * to obtain system time. Once SDL receive this notification
- * it is allowed to use GetSystemTimeRequest to rerieve system time.
- */
-class OnSystemTimeReadyNotification : public NotificationFromHMI {
- public:
-  /**
-   * @brief OnSystemTimeReadyNotification create the command.
-   * @param message content of the command. Passed directy to base class.
-   */
-  OnSystemTimeReadyNotification(const MessageSharedPtr& message,
-                                ApplicationManager& application_manager);
+BasicCommunicationGetSystemTimeResponse::
+    BasicCommunicationGetSystemTimeResponse(
+        const application_manager::commands::MessageSharedPtr& message,
+        ApplicationManager& application_manager,
+        rpc_service::RPCService& rpc_service,
+        HMICapabilities& hmi_capabilities,
+        policy::PolicyHandlerInterface& policy_handler)
+    : ResponseFromHMI(message,
+                      application_manager,
+                      rpc_service,
+                      hmi_capabilities,
+                      policy_handler) {}
 
-  /**
-   * @brief ~OnSystemTimeReadyNotification destroys the command object.
-   */
-  ~OnSystemTimeReadyNotification();
+void BasicCommunicationGetSystemTimeResponse::Run() {
+  LOG4CXX_AUTO_TRACE(logger_);
 
-  /**
-   * @brief Run creates SystemTimeReady event
-   * and notifies all the subscribers.
-   */
-  void Run() FINAL;
-};
+  event_engine::Event event(
+      hmi_apis::FunctionID::BasicCommunication_GetSystemTime);
+  event.set_smart_object(*message_);
+  event.raise(application_manager_.event_dispatcher());
+}
 
 }  // namespace commands
 }  // namespace application_manager
-
-#endif  // SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_COMMANDS_HMI_ON_SYSTEM_TIME_READY_NOTIFICATION_H_

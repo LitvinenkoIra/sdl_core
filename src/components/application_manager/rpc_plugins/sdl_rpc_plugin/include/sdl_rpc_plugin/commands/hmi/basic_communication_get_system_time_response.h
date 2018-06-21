@@ -33,20 +33,21 @@
 #ifndef SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_COMMANDS_HMI_BASIC_COMMUNICATION_GET_SYSTEM_TIME_RESPONSE_H_
 #define SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_COMMANDS_HMI_BASIC_COMMUNICATION_GET_SYSTEM_TIME_RESPONSE_H_
 
-#include "application_manager/commands/hmi/response_from_hmi.h"
+#include "application_manager/commands/response_from_hmi.h"
 
 #include "utils/macro.h"
 #include "application_manager/application_manager_impl.h"
 
-namespace application_manager {
-
+namespace sdl_rpc_plugin {
+namespace app_mngr = application_manager;
 namespace commands {
 
 /**
  * @brief The BasicCommunicationGetSystemTimeResponse class represents the
  * HMI response which is contains data obtained from HMI.
  */
-class BasicCommunicationGetSystemTimeResponse : public ResponseFromHMI {
+class BasicCommunicationGetSystemTimeResponse
+    : public app_mngr::commands::ResponseFromHMI {
  public:
   /**
    * @brief BasicCommunicationGetSystemTimeResponse does nothing except of
@@ -56,7 +57,11 @@ class BasicCommunicationGetSystemTimeResponse : public ResponseFromHMI {
    * neccessary api to send the request.
    */
   BasicCommunicationGetSystemTimeResponse(
-      const MessageSharedPtr& message, ApplicationManager& application_manager);
+      const app_mngr::commands::MessageSharedPtr& message,
+      app_mngr::ApplicationManager& application_manager,
+      app_mngr::rpc_service::RPCService& rpc_service,
+      app_mngr::HMICapabilities& hmi_capabilities,
+      policy::PolicyHandlerInterface& policy_handler);
 
   /**
    * @brief Run takes the message obtained from the HMI and
@@ -66,6 +71,6 @@ class BasicCommunicationGetSystemTimeResponse : public ResponseFromHMI {
 };
 
 }  // namespace commands
-}  // namespace application_manager
+}  // namespace sdl_rpc_plugin
 
 #endif  // SRC_COMPONENTS_APPLICATION_MANAGER_INCLUDE_APPLICATION_MANAGER_COMMANDS_HMI_BASIC_COMMUNICATION_GET_SYSTEM_TIME_RESPONSE_H_

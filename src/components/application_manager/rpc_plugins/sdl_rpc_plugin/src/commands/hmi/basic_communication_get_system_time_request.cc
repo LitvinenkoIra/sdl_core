@@ -11,7 +11,7 @@
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following
  * disclaimer in the documentation and/or other materials provided with the
- * distribution.
+ * distribut wiion.
  *
  * Neither the name of the Ford Motor Company nor the names of its contributors
  * may be used to endorse or promote products derived from this software
@@ -30,27 +30,29 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "application_manager/commands/hmi/on_system_time_ready_notification.h"
+#include "sdl_rpc_plugin/commands/hmi/basic_communication_get_system_time_request.h"
 
-#include "application_manager/event_engine/event.h"
-#include "interfaces/HMI_API.h"
-
-namespace application_manager {
+namespace sdl_rpc_plugin {
+using namespace application_manager;
 
 namespace commands {
 
-OnSystemTimeReadyNotification::OnSystemTimeReadyNotification(
-    const MessageSharedPtr& message, ApplicationManager& application_manager)
-    : NotificationFromHMI(message, application_manager) {}
+BasicCommunicationGetSystemTimeRequest::BasicCommunicationGetSystemTimeRequest(
+    const application_manager::commands::MessageSharedPtr& message,
+    ApplicationManager& application_manager,
+    app_mngr::rpc_service::RPCService& rpc_service,
+    app_mngr::HMICapabilities& hmi_capabilities,
+    policy::PolicyHandlerInterface& policy_handler)
+    : RequestToHMI(message,
+                   application_manager,
+                   rpc_service,
+                   hmi_capabilities,
+                   policy_handler) {}
 
-OnSystemTimeReadyNotification::~OnSystemTimeReadyNotification() {}
-
-void OnSystemTimeReadyNotification::Run() {
-  event_engine::Event event(
-      hmi_apis::FunctionID::BasicCommunication_OnSystemTimeReady);
-  event.set_smart_object(*message_);
-  event.raise(application_manager_.event_dispatcher());
+void BasicCommunicationGetSystemTimeRequest::onTimeOut() {
+  LOG4CXX_AUTO_TRACE(logger_);
+  application_manager_.protocol_handler().NotifyOnFailedHandshake();
 }
 
 }  // namespace commands
-}  // namespace application_manager
+}  // namespace sdl_rpc_plugin
