@@ -160,9 +160,14 @@ class ResourceAllocationManager {
   /**
    * @brief Create and send OnRCStatusNotification to mobile and HMI
    * @param event trigger for notification sending
+   * @param application - application to which notification is sent
+   * in case of registration, in cases of RC enabling/disabling
+   * or module allocation - application is just empty shared ptr,
+   * because in these cases the notification is sent to all registered apps
    */
   virtual void SendOnRCStatusNotifications(
-      NotificationTrigger::eType event) = 0;
+      NotificationTrigger::eType event,
+      application_manager::ApplicationSharedPtr application) = 0;
 
   virtual bool is_rc_enabled() const = 0;
 
