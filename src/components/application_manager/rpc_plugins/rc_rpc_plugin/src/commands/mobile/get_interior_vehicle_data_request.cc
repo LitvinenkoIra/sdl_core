@@ -127,6 +127,11 @@ void GetInteriorVehicleDataRequest::ProcessResponseToMobileFromCache(
   if (request_msg_params.keyExists(message_params::kSubscribe)) {
     response_msg_params[message_params::kIsSubscribed] =
         request_msg_params[message_params::kSubscribe].asBool();
+    if(request_msg_params[message_params::kSubscribe].asBool()){
+        auto extension = application_manager::AppExtensionPtr::static_pointer_cast<
+            RCAppExtension>(app->QueryInterface(RCRPCPlugin::kRCPluginID));
+        extension->SubscribeToInteriorVehicleData(ModuleType());
+    }
   }
   SendResponse(
       true, mobile_apis::Result::SUCCESS, nullptr, &response_msg_params);
