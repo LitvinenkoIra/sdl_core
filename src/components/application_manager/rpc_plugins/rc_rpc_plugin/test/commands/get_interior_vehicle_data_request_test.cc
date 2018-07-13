@@ -545,7 +545,8 @@ TEST_F(GetInteriorVehicleDataRequestTest,
   size_t i = 0;
   for (; i < max_request_in_time_frame; ++i) {
     // Expectations
-    EXPECT_CALL(mock_interior_data_cache_, GetCurrentAmountOfRequests())
+    EXPECT_CALL(mock_interior_data_cache_,
+                GetCurrentAmountOfRequests(enums_value::kRadio))
         .WillOnce(Return(i));
     EXPECT_CALL(mock_interior_data_cache_, Contains(enums_value::kRadio))
         .WillOnce(Return(true));
@@ -570,7 +571,8 @@ TEST_F(GetInteriorVehicleDataRequestTest,
   }
 
   // Expectations
-  EXPECT_CALL(mock_interior_data_cache_, GetCurrentAmountOfRequests())
+  EXPECT_CALL(mock_interior_data_cache_,
+              GetCurrentAmountOfRequests(enums_value::kRadio))
       .WillOnce(Return(i));
 
   MessageSharedPtr command_result;
