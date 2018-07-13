@@ -45,6 +45,9 @@
 #include "utils/shared_ptr.h"
 #include "utils/make_shared.h"
 
+#include <thread>
+#include <chrono>
+
 using ::testing::_;
 using ::testing::Mock;
 using ::testing::NiceMock;
@@ -72,6 +75,8 @@ const uint32_t kAppId = 0u;
 const uint32_t kAppId2 = 1u;
 const int kModuleId = 153u;
 const auto module_type = mobile_apis::ModuleType::RADIO;
+const uint32_t time_frame_of_allowed_requests = 1;
+const uint32_t max_request_in_time_frame = 5;
 }
 
 namespace rc_rpc_plugin_test {
@@ -523,4 +528,58 @@ TEST_F(GetInteriorVehicleDataRequestTest,
       rc_app_extention_->IsSubscibedToInteriorVehicleData(enums_value::kRadio));
 }
 
+TEST_F(GetInteriorVehicleDataRequestTest,
+       Execute_ExpectRejectDuToRequestLimitation_DataFromCache) {
+  // Arrange
+  rc_app_extention_->SubscribeToInteriorVehicleData(enums_value::kRadio);
+  MessageSharedPtr mobile_message = CreateBasicMessage();
+  (*mobile_message)[application_manager::strings::msg_params]
+                   [message_params::kModuleType] = module_type;
+  smart_objects::SmartObject radio_data;
+  radio_data[message_params::kBand] = enums_value::kAM;
+  application_manager::SharedPtr<
+      rc_rpc_plugin::commands::GetInteriorVehicleDataRequest> command =
+      CreateRCCommand<rc_rpc_plugin::commands::GetInteriorVehicleDataRequest>(
+          mobile_message);
+
+  size_t i = 0;
+  for (; i < max_request_in_time_frame; ++i) {
+    // Expectations
+    EXPECT_CALL(mock_interior_data_cache_, GetCurrentAmountOfRequests())
+        .WillOnce(Return(i));
+    EXPECT_CALL(mock_interior_data_cache_, Contains(enums_value::kRadio))
+        .WillOnce(Return(true));
+    EXPECT_CALL(mock_interior_data_cache_, Retrieve(enums_value::kRadio))
+        .WillOnce(Return(radio_data));
+
+    EXPECT_CALL(mock_rpc_service_, ManageHMICommand(_)).Times(0);
+    MessageSharedPtr command_result;
+    EXPECT_CALL(mock_rpc_service_,
+                ManageMobileCommand(
+                    MobileResultCodeIs(mobile_apis::Result::SUCCESS), _))
+        .WillOnce(DoAll(SaveArg<0>(&command_result), Return(true)));
+
+    // Act
+    command->Run();
+
+    // Assert
+    EXPECT_EQ((*command_result)[application_manager::strings::msg_params]
+                               [message_params::kModuleData]
+                               [message_params::kRadioControlData],
+              radio_data);
+  }
+
+  // Expectations
+  EXPECT_CALL(mock_interior_data_cache_, GetCurrentAmountOfRequests())
+      .WillOnce(Return(i));
+
+  MessageSharedPtr command_result;
+  EXPECT_CALL(
+      mock_rpc_service_,
+      ManageMobileCommand(MobileResultCodeIs(mobile_apis::Result::REJECTED), _))
+      .WillOnce(DoAll(SaveArg<0>(&command_result), Return(false)));
+
+  // Act
+  command->Run();
+}
 }  // namespace rc_rpc_plugin_test
