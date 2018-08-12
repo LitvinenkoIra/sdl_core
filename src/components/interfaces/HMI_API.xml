@@ -2727,6 +2727,7 @@
   <description>
     Describes different audio type configurations for PerformAudioPassThru.
     e.g. 8kHz,8-bit,PCM
+    The audio is recorded in monaural.
   </description>
   <param name="samplingRate" type="Common.SamplingRate" mandatory="true"/>
   <param name="bitsPerSample" type="Common.BitsPerSample" mandatory="true"/>

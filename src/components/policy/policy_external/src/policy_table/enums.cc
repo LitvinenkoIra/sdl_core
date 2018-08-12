@@ -811,6 +811,7 @@ bool EnumFromJsonString(const std::string& literal, ModuleType* result) {
     return true;
   } else if ("SEAT" == literal) {
     *result = MT_SEAT;
+    return true;
   } else if ("AUDIO" == literal) {
     *result = MT_AUDIO;
     return true;
@@ -819,6 +820,7 @@ bool EnumFromJsonString(const std::string& literal, ModuleType* result) {
     return true;
   } else if ("HMI_SETTINGS" == literal) {
     *result = MT_HMI_SETTINGS;
+    return true;
   } else {
     return false;
   }
