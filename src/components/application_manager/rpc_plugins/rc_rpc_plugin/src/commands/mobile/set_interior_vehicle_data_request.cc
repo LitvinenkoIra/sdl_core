@@ -477,7 +477,8 @@ bool CheckReadOnlyParamsForAudio(
     auto it = equalizer_settings.asArray()->begin();
     for (; it != equalizer_settings.asArray()->end(); ++it) {
       if (it->keyExists(message_params::kChannelName)) {
-        LOG4CXX_DEBUG(logger_, " READ ONLY parameter: ");
+        LOG4CXX_DEBUG(logger_,
+                      " READ ONLY parameter: " << message_params::kChannelName);
         return true;
       }
     }
