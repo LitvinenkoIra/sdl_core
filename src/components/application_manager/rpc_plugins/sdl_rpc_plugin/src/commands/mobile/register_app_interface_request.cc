@@ -158,13 +158,13 @@ class SmartArrayValueExtractor {
 };
 
 struct IsSameNickname {
-  IsSameNickname(const custom_str::CustomString& app_id) : app_id_(app_id) {}
+  IsSameNickname(const custom_str::CustomString app_id) : app_id_(app_id) {}
   bool operator()(const policy::StringArray::value_type& nickname) const {
     return app_id_.CompareIgnoreCase(nickname.c_str());
   }
 
  private:
-  const custom_str::CustomString& app_id_;
+  const custom_str::CustomString app_id_;
 };
 }  // namespace
 
